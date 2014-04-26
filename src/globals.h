@@ -31,7 +31,7 @@ struct YaourtOutdatedPackages
     QHash<QString, QString> content;
 };
 
-typedef std::pair<QString, QList<QString>*> GroupMemberPair;
+typedef std::pair<QString, QStringList*> GroupMemberPair;
 
 
 extern QFutureWatcher<QString> g_fwToolTip;

@@ -27,15 +27,30 @@
 #include "package.h"
 
 
+/**
+ * @brief Central data storage for package data
+ */
 class PackageRepository
 {
 public:
+  class PackageData;
+  typedef QList<PackageData*> TListOfPackages;
+
+public:
+  ////////////////////////
+  /**
+   * @brief The IDependency class used for notification of dependent models
+   */
   class IDependency {
   public:
     virtual void beginResetRepository() = 0;
     virtual void endResetRepository() = 0;
   };
 
+  ////////////////////////
+  /**
+   * @brief Holds data of one package + a few convenience functions
+   */
   class PackageData {
   public:
     /**
@@ -57,10 +72,14 @@ public:
     const QString version;
     const QString description;
     const QString outdatedVersion;
-    const double downloadSize;
+    const double  downloadSize;
     const PackageStatus status;
   };
 
+  ////////////////////////
+  /**
+   * @brief The Group class holds name and members of a package group
+   */
   class Group {
   public:
     Group(const QString& name);
@@ -70,12 +89,13 @@ public:
     void addPackage(PackageData& package);
     void invalidateList();
 
-    const QList<PackageData*>* getPackageList() const;
+    const TListOfPackages* getPackageList() const;
 
   private:
     QString name;
-    QList<PackageData*>* m_listOfPackages; // WEAK ptr PackageData*
+    TListOfPackages* m_listOfPackages; // WEAK ptr PackageData*
   };
+  ////////////////////////
 
 public:
   PackageRepository();
@@ -86,14 +106,14 @@ public:
   void checkAndSetGroups(const QStringList& listOfGroups);
   void checkAndSetMembersOfGroup(const QString& group, const QStringList& members);
 
-  const QList<PackageData*>& getPackageList() const;
-  const QList<PackageData*>& getPackageList(const QString& group) const;
-  const PackageData*         getFirstPackageByName(const QString name) const;
+  const TListOfPackages& getPackageList() const;
+  const TListOfPackages& getPackageList(const QString& group) const;
+  PackageData*           getFirstPackageByName(const QString name) const;
 
 private:
   std::vector<IDependency*> m_dependingModels;
-  QList<PackageData*>       m_listOfPackages;       // sorted qlist of all packages
-  QList<PackageData*>       m_listOfYaourtPackages; // sorted qlist of all yaourt packages
+  TListOfPackages           m_listOfPackages;       // sorted qlist of all packages
+  TListOfPackages           m_listOfYaourtPackages; // sorted qlist of all yaourt packages
   QList<Group*>             m_listOfGroups;         // sorted list of all pacman package groups
   bool memberListOfGroupsEquals(const QStringList& listOfGroups);
 };

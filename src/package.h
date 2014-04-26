@@ -145,6 +145,7 @@ class Package{
 
     static QStringList getOptionalDeps(const QString &pkgName);
 
+    static QString getName(const QString &pkgInfo);
     static QString getVersion(const QString &pkgInfo);
     static QString getRepository(const QString &pkgInfo);
     static QString getURL(const QString &pkgInfo);

@@ -164,7 +164,7 @@ void PackageModel::endResetRepository()
   const QList<PackageRepository::PackageData*>& data = m_packageRepo.getPackageList(m_filterPackagesNotInThisGroup);
   m_listOfPackages.reserve(data.size());
   for (QList<PackageRepository::PackageData*>::const_iterator it = data.begin(); it != data.end(); ++it) {
-      if (m_filterPackagesNotInstalled == false || (*it)->status != ectn_NON_INSTALLED) {
+      if (m_filterPackagesNotInstalled == false || (*it)->installed()) {
         if (m_filterRegExp.isEmpty()) {
           m_listOfPackages.push_back(*it);
         }
@@ -210,9 +210,9 @@ void PackageModel::applyFilter(bool packagesNotInstalled, const QString& group)
 {
 //  std::cout << "apply new group filter " << (packagesNotInstalled ? "true" : "false") << ", " << group.toStdString() << std::endl;
 
+  beginResetRepository();
   m_filterPackagesNotInstalled   = packagesNotInstalled;
   m_filterPackagesNotInThisGroup = group;
-  beginResetRepository();
   endResetRepository();
 }
 
@@ -231,9 +231,9 @@ void PackageModel::applyFilter(const int filterColumn, const QString& filterExp)
   assert(filterExp.isNull() == false);
 //  std::cout << "apply new column filter " << filterColumn << ", " << filterExp.toStdString() << std::endl;
 
+  beginResetRepository();
   m_filterColumn = filterColumn;
   m_filterRegExp.setPattern(filterExp);
-  beginResetRepository();
   endResetRepository();
 }
 

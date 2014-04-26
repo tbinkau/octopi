@@ -607,6 +607,14 @@ QString Package::extractFieldFromInfo(const QString &field, const QString &pkgIn
 }
 
 /*
+ * Retrieves "Name" field of the given package information string represented by pkgInfo
+ */
+QString Package::getName(const QString& pkgInfo)
+{
+  return extractFieldFromInfo("Name", pkgInfo);
+}
+
+/*
  * Retrieves "Version" field of the given package information string represented by pkgInfo
  */
 QString Package::getVersion(const QString &pkgInfo)
