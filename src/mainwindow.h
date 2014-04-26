@@ -127,10 +127,10 @@ private:
   QList<PackageListData> *m_listOfYaourtPackages;
 
   //This member holds the list of Pacman packages available
-  QList<PackageListData> *m_listOfPackages;
+  std::auto_ptr<QList<PackageListData> > m_listOfPackages;
 
   //This member holds the list of Pacman packages from the selected group
-  QList<QString> *m_listOfPackagesFromGroup;
+  std::auto_ptr<QList<QString> > m_listOfPackagesFromGroup;
 
   //This member holds the target list retrieved by the pacman command which will be executed
   QStringList *m_targets;

@@ -136,7 +136,7 @@ void MainWindow::buildPackagesFromGroupList(const QString group)
     return;
   }
 
-  QList<QString> *list = m_listOfPackagesFromGroup;
+  const QList<QString>*const list = m_listOfPackagesFromGroup.get();
 
   QList<QString>::const_iterator it = list->begin();
 
@@ -180,7 +180,7 @@ void MainWindow::buildPackagesFromGroupList(const QString group)
   ui->tvPackages->scrollTo(maux, QAbstractItemView::PositionAtCenter);
   ui->tvPackages->setCurrentIndex(maux);
 
-  list->clear();
+  m_listOfPackagesFromGroup.reset();
   refreshTabInfo();
   refreshTabFiles();
   ui->tvPackages->setFocus();
@@ -251,8 +251,7 @@ void MainWindow::preBuildPackageList()
   static bool secondTime=false;
   bool hasToCallSysUpgrade = (m_callSystemUpgrade || m_callSystemUpgradeNoConfirm);
 
-  if (m_listOfPackages) m_listOfPackages->clear();
-  m_listOfPackages = g_fwPacman.result();
+  m_listOfPackages.reset(g_fwPacman.result());
   buildPackageList();
 
   if(!hasToCallSysUpgrade && !secondTime && UnixCommand::hasTheExecutable(ctn_MIRROR_CHECK_APP))
@@ -268,9 +267,8 @@ void MainWindow::preBuildPackageList()
  */
 void MainWindow::preBuildPackagesFromGroupList()
 {
-  if (m_listOfPackagesFromGroup) m_listOfPackagesFromGroup->clear();
   GroupMemberPair result = g_fwPacmanGroup.result();
-  m_listOfPackagesFromGroup = result.second;
+  m_listOfPackagesFromGroup.reset(result.second);
   buildPackagesFromGroupList(result.first);
 }
 
@@ -371,17 +369,17 @@ void MainWindow::buildPackageList(bool nonBlocking)
   }
 
   qApp->processEvents();
-  const QSet<QString>*const unrequiredPackageList = Package::getUnrequiredPackageList();
+  const std::auto_ptr<const QSet<QString> > unrequiredPackageList(Package::getUnrequiredPackageList());
 
   // fetch package list
   QList<PackageListData> *list;
   if(nonBlocking)
-    list = m_listOfPackages;
+    list = m_listOfPackages.release();
   else
     list = Package::getPackageList();
 
   // fetch foreign package list
-  QList<PackageListData> *listForeign = Package::getForeignPackageList();
+  std::auto_ptr<QList<PackageListData> > listForeign(Package::getForeignPackageList());
   qApp->processEvents();
 
   m_progressWidget->setRange(0, list->count());
@@ -405,7 +403,6 @@ void MainWindow::buildPackageList(bool nonBlocking)
             itForeign->name + " " + Package::getInformationDescription(itForeign->name, true),
             ectn_FOREIGN_OUTDATED);
     }
-
     list->append(pld);
 
     itForeign++;
@@ -446,7 +443,8 @@ void MainWindow::buildPackageList(bool nonBlocking)
   ui->tvPackages->scrollTo(maux, QAbstractItemView::PositionAtCenter);
   ui->tvPackages->setCurrentIndex(maux);
 
-  list->clear();
+  delete list;
+  list = NULL;
   refreshTabInfo();
   refreshTabFiles();
 
