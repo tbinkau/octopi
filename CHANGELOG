@@ -1,4 +1,6 @@
 0.4.0 (dev)
+  Experimental: show packages required by a package OR packages that
+                depend on a package as child items in the package view
   BugFix: Now Shift+F3 and F3 search keys (and also Esc) work outside 
 	SearchLineEdit widget.
   BugFix: fixed freeze for install orphaned/yaourt package (thanks to 

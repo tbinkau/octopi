@@ -22,6 +22,8 @@
 #define OCTOPI_PACKAGEREPOSITORY_H
 
 #include <vector>
+#include <memory>
+#include <cassert>
 #include <QList>
 
 #include "package.h"
@@ -48,10 +50,17 @@ public:
   };
 
   ////////////////////////
+  class PackageGuard;
+
+  ////////////////////////
   /**
    * @brief Holds data of one package + a few convenience functions
    */
   class PackageData {
+  public:
+    friend class PackageRepository::PackageGuard;
+    typedef TListOfPackages TDependencyVec;
+
   public:
     /**
      * @brief PackageData constructor
@@ -64,6 +73,27 @@ public:
       return status != ectn_NON_INSTALLED;
     }
 
+    inline const TDependencyVec* getDependsOn() const {
+      return dependsOn.get();
+    }
+
+    inline const TDependencyVec* getRequiredBy() const {
+      return requiredBy.get();
+    }
+
+  private:
+    inline void setDependsOn(const TDependencyVec* packages) {
+//      std::cout << "set dependencies for " << name.toStdString() << " to " << dependencies << std::endl;
+      this->dependsOn.reset(packages);
+    }
+    inline void resetRequiredBy() {
+      this->requiredBy.reset(new TDependencyVec());
+    }
+    inline void addRequiredBy(PackageData& pkg) {
+      assert(this->requiredBy.get() != NULL);
+      this->requiredBy->push_back(&pkg);
+    }
+
   public:
     const bool    required;
     const bool    managedByYaourt; // yaourt packages must not be in any group
@@ -74,6 +104,22 @@ public:
     const QString outdatedVersion;
     const double  downloadSize;
     const PackageStatus status;
+
+  private:
+    std::auto_ptr<const TDependencyVec> dependsOn;
+    std::auto_ptr<TDependencyVec>       requiredBy;
+  };
+
+  ////////////////////////
+  /**
+   * @brief The PackageGuard class enables access to specific private functions
+   */
+  class PackageGuard {
+    friend class PackageRepository;
+
+    inline static void setDependencies(PackageData& pkg, const PackageData::TDependencyVec*const dependencies);
+    inline static void resetRequirements(PackageData& pkg);
+    inline static void addRequirement(PackageData& pkg, PackageData& dependsOnPkg);
   };
 
   ////////////////////////
@@ -103,6 +149,8 @@ public:
   void registerDependency(IDependency& depends);
   void setData(const QList<PackageListData>*const listOfPackages, const QSet<QString>& unrequiredPackages);
   void setAURData(const QList<PackageListData>*const listOfForeignPackages, const QSet<QString>& unrequiredPackages);
+  void setPackageDependencies(const QList<std::pair<PackageData*, QStringList> >& dependencies);
+  bool setPackageRequirements(bool forceSuccessful);
   void checkAndSetGroups(const QStringList& listOfGroups);
   void checkAndSetMembersOfGroup(const QString& group, const QStringList& members);
 
@@ -117,5 +165,16 @@ private:
   QList<Group*>             m_listOfGroups;         // sorted list of all pacman package groups
   bool memberListOfGroupsEquals(const QStringList& listOfGroups);
 };
+
+
+void PackageRepository::PackageGuard::setDependencies(PackageData& pkg, const PackageData::TDependencyVec*const dependencies) {
+  pkg.setDependsOn(dependencies);
+}
+void PackageRepository::PackageGuard::resetRequirements(PackageData& pkg) {
+  pkg.resetRequiredBy();
+}
+void PackageRepository::PackageGuard::addRequirement(PackageData& pkg, PackageData& dependsOnPkg) {
+  pkg.addRequiredBy(dependsOnPkg);
+}
 
 #endif // OCTOPI_PACKAGEREPOSITORY_H

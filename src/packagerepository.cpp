@@ -110,6 +110,81 @@ void PackageRepository::setAURData(const QList<PackageListData>*const listOfFore
     std::for_each(m_dependingModels.begin(), m_dependingModels.end(), EndResetModel());
 }
 
+void PackageRepository::setPackageDependencies(const QList<std::pair<PackageData*, QStringList> >& dependencies)
+{
+//  std::cout << "set package dependencies" << std::endl;
+
+  typedef const QList<std::pair<PackageData*, QStringList> > TDepList;
+
+  //TODO: full reset model isnt really necessary here since dependencies never change
+  std::for_each(m_dependingModels.begin(), m_dependingModels.end(), BeginResetModel());
+
+  for (TDepList::const_iterator it = dependencies.begin();
+       it != dependencies.end(); ++it)
+  {
+    PackageData* pkg = const_cast<PackageData*>(it->first);
+    PackageData::TDependencyVec* depVec = new PackageData::TDependencyVec();
+    for (int x = 0; x < it->second.size(); ++x) {
+      PackageData* depPkg = getFirstPackageByName(it->second.at(x));
+      //FIXME: doesnt work sometimes because there are packages with same name in different (official) repos
+      //       also there are dependencies like packageAbc>=5.0.1
+      if (depPkg != NULL) depVec->push_back(depPkg);
+    }
+    PackageGuard::setDependencies(*pkg, depVec);
+  }
+
+  std::for_each(m_dependingModels.begin(), m_dependingModels.end(), EndResetModel());
+}
+
+/**
+ * @brief calculate and set required packages for all pacman packages (inverse dependencies)
+ * @param forceSuccessful is a hack to help prototyping and will be removed later on
+ * @return false if not successful
+ *
+ * All dependencies must be set before calling this method (setPackageDependencies)
+ */
+bool PackageRepository::setPackageRequirements(bool forceSuccessful)
+{
+//  std::cout << "set package requirements" << std::endl;
+
+  //TODO: full reset model isnt really necessary here since dependencies will never change
+  std::for_each(m_dependingModels.begin(), m_dependingModels.end(), BeginResetModel());
+
+  // first we check that all pacman packages have dependencies fetched
+  for (TListOfPackages::const_iterator it = m_listOfPackages.begin(); it != m_listOfPackages.end(); ++it) {
+    if (*it != NULL && (*it)->managedByYaourt == false) {
+      if ((*it)->getDependsOn() == NULL) {
+        std::cerr << "Octopi package " << (*it)->name.toStdString() << " is missing dependency information" << std::endl;
+        if (!forceSuccessful) return false;
+        //FIXME: sometimes this might fail because the dependency list wasnt processed correctly
+        //       forceSuccessful should be removed when this is fixed
+      }
+    }
+  }
+
+  // now we reset all requirements lists
+  for (TListOfPackages::iterator it = m_listOfPackages.begin(); it != m_listOfPackages.end(); ++it) {
+    if (*it != NULL && (*it)->managedByYaourt == false) {
+      PackageGuard::resetRequirements(**it);
+    }
+  }
+
+  // now we set all requirements
+  for (TListOfPackages::iterator it = m_listOfPackages.begin(); it != m_listOfPackages.end(); ++it) {
+    if (*it != NULL && (*it)->managedByYaourt == false) {
+      const PackageData::TDependencyVec*const deps = (*it)->getDependsOn();
+      if (forceSuccessful && deps == NULL) continue; //FIXME: also an error in upstream processing
+      for (PackageData::TDependencyVec::const_iterator itDepPkg = deps->begin(); itDepPkg != deps->end(); ++itDepPkg) {
+        // now each package in the dependsOn list obviously requires package (*it)
+        PackageGuard::addRequirement(**itDepPkg, **it);
+      }
+    }
+  }
+
+  std::for_each(m_dependingModels.begin(), m_dependingModels.end(), EndResetModel());
+  return true;
+}
+
 /**
  * @brief if the repository groups differ from %listOfGroups they will be reset
  * @param listOfGroups == group names

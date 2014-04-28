@@ -1098,7 +1098,7 @@ void MainWindow::findFileInPackage()
   QTreeView *tb = ui->twProperties->currentWidget()->findChild<QTreeView*>("tvPkgFileList");
   SearchBar *searchBar = ui->twProperties->currentWidget()->findChild<SearchBar*>("searchbar");
 
-  if (tb && tb->model()->rowCount() > 0 && searchBar)
+  if (tb && tb->model()->rowCount() > 0)
   {
     if (searchBar)
     {
@@ -1164,4 +1164,58 @@ void MainWindow::launchRepoEditor()
 {
   m_unixCommand = new UnixCommand(this);
   m_unixCommand->executeCommand(QLatin1String("octopi-repoeditor"));
+}
+
+void MainWindow::on_actionShow_Dependencies_triggered()
+{
+//FIXME: prototype
+  m_packageModel->switchDisplayMode(PackageModel::DEPENDS_ON);
+  QList<std::pair<PackageRepository::PackageData*, QStringList> > dependencies;
+
+  QString pkgInfoAll   = UnixCommand::getPackageInformation("", false);
+  QStringList pkgInfos = pkgInfoAll.split("\n\n", QString::SkipEmptyParts);
+  std::cout << "fetched info for " << pkgInfos.size() << " packages, " << pkgInfoAll.length() << "bytes" << std::endl;
+
+  for (int x = 0; x < pkgInfos.size(); ++x) {
+    QString aux = Package::getDependsOn(pkgInfos.at(x));
+    QStringList result = aux.split(" ", QString::SkipEmptyParts);
+    result.removeAll("None");
+
+    dependencies.push_back(std::make_pair(m_packageRepo.getFirstPackageByName(Package::getName(pkgInfos.at(x))), result));
+  }
+  m_packageRepo.setPackageDependencies(dependencies);
+
+  ui->tvPackages->setIndentation(20);
+  ui->tvPackages->setColumnWidth(PackageModel::ctn_PACKAGE_ICON_COLUMN, 400);
+  ui->tvPackages->setColumnWidth(PackageModel::ctn_PACKAGE_NAME_COLUMN, 24); //500
+  ui->tvPackages->setColumnWidth(PackageModel::ctn_PACKAGE_VERSION_COLUMN, 160);
+
+}
+
+void MainWindow::on_actionShow_Package_list_triggered()
+{
+//FIXME: prototype
+  m_packageModel->switchDisplayMode(PackageModel::FLAT);
+  ui->tvPackages->setIndentation(0);
+  resizePackageView();
+}
+
+void MainWindow::on_actionShow_Required_by_triggered()
+{
+//FIXME: prototype
+  if (m_packageRepo.setPackageRequirements(false)) {
+    m_packageModel->switchDisplayMode(PackageModel::REQUIRED_BY);
+  }
+  else {
+    on_actionShow_Dependencies_triggered();
+    if (m_packageRepo.setPackageRequirements(true)) {
+      m_packageModel->switchDisplayMode(PackageModel::REQUIRED_BY);
+    }
+  }
+
+  ui->tvPackages->setIndentation(20);
+  ui->tvPackages->setColumnWidth(PackageModel::ctn_PACKAGE_ICON_COLUMN, 400);
+  ui->tvPackages->setColumnWidth(PackageModel::ctn_PACKAGE_NAME_COLUMN, 24); //500
+  ui->tvPackages->setColumnWidth(PackageModel::ctn_PACKAGE_VERSION_COLUMN, 160);
+
 }

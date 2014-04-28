@@ -26,6 +26,7 @@
 
 #include "src/package.h"
 #include "src/packagerepository.h"
+#include "packageitem.h"
 
 
 class PackageModel : public QAbstractItemModel, public PackageRepository::IDependency
@@ -40,6 +41,12 @@ public:
   static const int ctn_PACKAGE_REPOSITORY_COLUMN  = 3;
   // Pseudo Column indices for additional filter criterias
   static const int ctn_PACKAGE_DESCRIPTION_FILTER_NO_COLUMN = 5;
+
+  enum EDisplayMode {
+    FLAT,
+    DEPENDS_ON,
+    REQUIRED_BY
+  };
 
 public:
   explicit PackageModel(const PackageRepository& repo, QObject* parent = 0);
@@ -57,6 +64,8 @@ public:
   virtual int columnCount(const QModelIndex& parent) const /*override*/;
   virtual QVariant data(const QModelIndex& index, int role) const /*override*/;
   virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const /*override*/;
+  virtual bool canFetchMore(const QModelIndex& parent) const /*override*/;
+  virtual void fetchMore(const QModelIndex& parent) /*override*/;
   virtual void sort(int column, Qt::SortOrder order) /*override*/;
 
   // IDependency interface
@@ -71,20 +80,28 @@ public:
 
   // Setter
 public:
+  void switchDisplayMode(EDisplayMode newMode);
   void applyFilter(bool packagesNotInstalled, const QString& group);
   void applyFilter(const int filterColumn);
   void applyFilter(const QString& filterExp);
   void applyFilter(const int filterColumn, const QString& filterExp);
 
 private:
+  PackageItem& getPackageItem(const QModelIndex& index) const; // for use in tree models only (e.g. depends)
   const QIcon& getIconFor(const PackageRepository::PackageData& package) const;
   void sort();
+private:
+  int transformRowIndex(int row, int rowCount) const;
+  static PackageItem* createDummyRoot();
 
 
 private:
   const PackageRepository&                m_packageRepo;
   QList<PackageRepository::PackageData*>  m_listOfPackages;             // should be provided sorted by name (by repo)
   QList<PackageRepository::PackageData*>  m_columnSortedlistOfPackages; // sorted by column
+
+  EDisplayMode                m_displayMode;
+  std::auto_ptr<PackageItem>  m_rootItem; // dummy for FLAT mode
 
   // Filter / Sort attributes
   Qt::SortOrder m_sortOrder;

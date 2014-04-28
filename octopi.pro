@@ -44,6 +44,7 @@ HEADERS  += src/QtSolutions/qtsingleapplication.h \
         src/utils/processwrapper.h \
         src/packagerepository.h \
         src/model/packagemodel.h \
+        src/model/packageitem.h \
         src/ui/octopitabinfo.h
 
 SOURCES += src/QtSolutions/qtsingleapplication.cpp \
@@ -77,6 +78,7 @@ SOURCES += src/QtSolutions/qtsingleapplication.cpp \
         src/utils/processwrapper.cpp \
         src/packagerepository.cpp \
         src/model/packagemodel.cpp \
+        src/model/packageitem.cpp \
         src/ui/octopitabinfo.cpp
 
 FORMS   += ui/mainwindow.ui \

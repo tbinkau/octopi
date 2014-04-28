@@ -28,8 +28,10 @@
 
 
 PackageModel::PackageModel(const PackageRepository& repo, QObject *parent)
-: QAbstractItemModel(parent), m_packageRepo(repo), m_sortOrder(Qt::AscendingOrder),
-  m_sortColumn(1), m_filterPackagesNotInstalled(false), m_filterPackagesNotInThisGroup(""),
+: QAbstractItemModel(parent), m_packageRepo(repo), m_displayMode(FLAT),
+  m_rootItem(createDummyRoot()),
+  m_sortOrder(Qt::AscendingOrder), m_sortColumn(1),
+  m_filterPackagesNotInstalled(false), m_filterPackagesNotInThisGroup(""),
   m_filterColumn(-1), m_filterRegExp("", Qt::CaseInsensitive, QRegExp::RegExp),
   m_iconNotInstalled(IconHelper::getIconNonInstalled()), m_iconInstalled(IconHelper::getIconInstalled()),
   m_iconInstalledUnrequired(IconHelper::getIconUnrequired()),
@@ -40,42 +42,102 @@ PackageModel::PackageModel(const PackageRepository& repo, QObject *parent)
 
 QModelIndex PackageModel::index(int row, int column, const QModelIndex &parent) const
 {
-  if (!hasIndex(row, column, parent))
+  switch (m_displayMode) {
+  case FLAT: {
+    if (!hasIndex(row, column, parent))
+      return QModelIndex();
+
+    if (!parent.isValid()) {
+      const int adaptedRow = transformRowIndex(row, m_columnSortedlistOfPackages.size());
+      if (adaptedRow >= 0 && adaptedRow < m_columnSortedlistOfPackages.size()) {
+        return createIndex(row, column, (void*)m_columnSortedlistOfPackages.at(adaptedRow));
+      }
+    }
+    return QModelIndex();
+  }
+  case DEPENDS_ON:
+  case REQUIRED_BY: {
+    const PackageItem& pkgItem = getPackageItem(parent);
+    const std::size_t adaptedRow = transformRowIndex(row, pkgItem.getChildCount());
+    if (adaptedRow < static_cast<std::size_t>(pkgItem.getChildCount())) {
+      const PackageItem*const child = pkgItem.getChildAt(adaptedRow);
+      if (child != NULL) {
+        return createIndex(row, column, (void*)child);
+      }
+    }
+    return QModelIndex();
+  }
+  default:
+    assert(false);
+    return QModelIndex();
+  }
+}
+
+QModelIndex PackageModel::parent(const QModelIndex& child) const
+{
+  switch (m_displayMode) {
+  case FLAT:
     return QModelIndex();
 
-  if (!parent.isValid())
-    return createIndex(row, column, (void*)NULL);
+  case DEPENDS_ON:
+  case REQUIRED_BY: {
+    if (child.isValid() == false)
+      return QModelIndex();
 
-
-  return QModelIndex();
-}
-
-QModelIndex PackageModel::parent(const QModelIndex&) const
-{
-  return QModelIndex();
-}
-
-int PackageModel::rowCount(const QModelIndex &parent) const
-{
-  if (!parent.isValid()) {
-    return m_columnSortedlistOfPackages.size();
+    const PackageItem*const data = static_cast<const PackageItem*const>(child.internalPointer());
+    if (data == NULL || &data->getParent() == m_rootItem.get()) {
+      return QModelIndex();
+    }
+    else {
+      const PackageItem& parent = data->getParent();
+      int row = 0; //FIXME: search necessary ?
+      for (; row < parent.getChildCount(); ++row) {
+        if (parent.getChildAt(row) == data)
+          break;
+      }
+      return createIndex(row, child.column(), (void*)&parent);
+    }
   }
-  else {
+  default:
+    assert(false);
+    return QModelIndex();
+  }
+}
+
+int PackageModel::rowCount(const QModelIndex& parent) const
+{
+  if (m_displayMode == FLAT) {
+    if (parent.isValid() == false) {
+      return m_columnSortedlistOfPackages.size();
+    }
+    else return 0;
+  }
+  else if (m_displayMode == DEPENDS_ON || m_displayMode == REQUIRED_BY)
+  {
+    const PackageItem& branch = getPackageItem(parent);
+    return branch.getChildCount();
+  } else {
+    assert(false);
     return 0;
   }
 }
 
-int PackageModel::columnCount(const QModelIndex &parent) const
+int PackageModel::columnCount(const QModelIndex&) const
 {
-  if (!parent.isValid()) {
+  switch (m_displayMode) {
+  case FLAT:
     return 4;
+  case DEPENDS_ON:
+  case REQUIRED_BY:
+    return 4;
+  default:
+    return 0;
   }
-  else return 0;
 }
 
 QVariant PackageModel::data(const QModelIndex &index, int role) const
 {
-  if (index.isValid() && m_columnSortedlistOfPackages.size() > index.row()) {
+  if (index.isValid()) {
     switch (role) {
       case Qt::DisplayRole: {
         const PackageRepository::PackageData*const package = getData(index);
@@ -84,9 +146,11 @@ QVariant PackageModel::data(const QModelIndex &index, int role) const
 
         switch (index.column()) {
           case ctn_PACKAGE_ICON_COLUMN:
+            if (m_displayMode != FLAT) return QVariant(package->name);
             break;
           case ctn_PACKAGE_NAME_COLUMN:
-            return QVariant(package->name);
+            if (m_displayMode == FLAT) return QVariant(package->name);
+            break;
           case ctn_PACKAGE_VERSION_COLUMN:
             return QVariant(package->version);
           case ctn_PACKAGE_REPOSITORY_COLUMN:
@@ -123,9 +187,13 @@ QVariant PackageModel::headerData(int section, Qt::Orientation orientation, int 
     if (orientation == Qt::Horizontal) {
       switch (section) {
       case ctn_PACKAGE_ICON_COLUMN:
-        return QVariant();
+        if (m_displayMode == FLAT) return QVariant();
+        if (m_displayMode == DEPENDS_ON) return QVariant("Name (item depends on its child items)"); //FIXME: translate
+        if (m_displayMode == REQUIRED_BY) return QVariant("Name (item is required by its child items)"); //FIXME: translate
+        break;
       case ctn_PACKAGE_NAME_COLUMN:
-        return QVariant(StrConstants::getName());
+        if (m_displayMode == FLAT) return QVariant(StrConstants::getName());
+        return QVariant();
       case ctn_PACKAGE_VERSION_COLUMN:
         return QVariant(StrConstants::getVersion());
       case ctn_PACKAGE_REPOSITORY_COLUMN:
@@ -139,16 +207,56 @@ QVariant PackageModel::headerData(int section, Qt::Orientation orientation, int 
   return QAbstractItemModel::headerData(section, orientation, role);
 }
 
+bool PackageModel::canFetchMore(const QModelIndex& parent) const
+{
+  if (parent.isValid() == false || parent.row() < 0)
+    return false;
+
+  switch (m_displayMode) {
+  case FLAT:
+  default:
+    return false;
+  case DEPENDS_ON:
+    return getPackageItem(parent).canFetchChildren(PackageItem::DEPENDS_ON);
+  case REQUIRED_BY:
+    return getPackageItem(parent).canFetchChildren(PackageItem::REQUIRED_BY);
+  }
+}
+
+void PackageModel::fetchMore(const QModelIndex& parent)
+{
+  switch (m_displayMode) {
+  case FLAT:
+  default:
+    return;
+  case DEPENDS_ON:
+    getPackageItem(parent).fetchDepencies(PackageItem::DEPENDS_ON);
+    return;
+  case REQUIRED_BY:
+    getPackageItem(parent).fetchDepencies(PackageItem::REQUIRED_BY);
+    return;
+  }
+}
+
 void PackageModel::sort(int column, Qt::SortOrder order)
 {
 //  std::cout << "sort column " << column << " in order " << order << std::endl;
 
   if (column != m_sortColumn || order != m_sortOrder) {
+    if (m_displayMode == FLAT)
+      emit layoutAboutToBeChanged();
+    else beginResetModel();
     m_sortColumn = column;
     m_sortOrder  = order;
-    emit layoutAboutToBeChanged();
     sort();
-    emit layoutChanged();
+    if (m_displayMode == FLAT)
+      emit layoutChanged();
+    else {
+      //TODO: reset here requires reset model -> maybe sort child-list instead
+      m_rootItem.reset(new PackageItem(m_columnSortedlistOfPackages,
+                                       m_displayMode == DEPENDS_ON ? PackageItem::DEPENDS_ON : PackageItem::REQUIRED_BY));
+      endResetModel();
+    }
   }
 }
 
@@ -161,9 +269,9 @@ void PackageModel::beginResetRepository()
 
 void PackageModel::endResetRepository()
 {
-  const QList<PackageRepository::PackageData*>& data = m_packageRepo.getPackageList(m_filterPackagesNotInThisGroup);
+  const PackageRepository::TListOfPackages& data = m_packageRepo.getPackageList(m_filterPackagesNotInThisGroup);
   m_listOfPackages.reserve(data.size());
-  for (QList<PackageRepository::PackageData*>::const_iterator it = data.begin(); it != data.end(); ++it) {
+  for (PackageRepository::TListOfPackages::const_iterator it = data.begin(); it != data.end(); ++it) {
       if (m_filterPackagesNotInstalled == false || (*it)->installed()) {
         if (m_filterRegExp.isEmpty()) {
           m_listOfPackages.push_back(*it);
@@ -185,6 +293,11 @@ void PackageModel::endResetRepository()
   m_columnSortedlistOfPackages.reserve(data.size());
   m_columnSortedlistOfPackages = m_listOfPackages;
   sort();
+  if (m_displayMode == FLAT)
+    m_rootItem.reset(createDummyRoot());
+  else
+    m_rootItem.reset(new PackageItem(m_columnSortedlistOfPackages,
+                                     m_displayMode == DEPENDS_ON ? PackageItem::DEPENDS_ON : PackageItem::REQUIRED_BY));
   endResetModel();
 }
 
@@ -195,15 +308,29 @@ int PackageModel::getPackageCount() const
 
 const PackageRepository::PackageData* PackageModel::getData(const QModelIndex& index) const
 {
-  if (index.isValid() && index.row() < m_columnSortedlistOfPackages.size()) {
-    switch (m_sortOrder) {
-    case Qt::AscendingOrder:
-      return m_columnSortedlistOfPackages.at(index.row());
-    case Qt::DescendingOrder:
-      return m_columnSortedlistOfPackages.at(m_listOfPackages.size() - index.row() - 1);
-    }
+  if (index.isValid() == false || index.internalPointer() == NULL)
+    return NULL;
+
+  switch (m_displayMode) {
+  case FLAT: {
+    return static_cast<const PackageRepository::PackageData*const>(index.internalPointer());
   }
-  return NULL;
+  case DEPENDS_ON:
+  case REQUIRED_BY: {
+    const PackageItem*const data = static_cast<const PackageItem*const>(index.internalPointer());
+    return &data->getPackage();
+  }
+  default:
+    assert(false);
+    return NULL;
+  }
+}
+
+void PackageModel::switchDisplayMode(PackageModel::EDisplayMode newMode)
+{
+  beginResetRepository();
+  m_displayMode = newMode;
+  endResetRepository();
 }
 
 void PackageModel::applyFilter(bool packagesNotInstalled, const QString& group)
@@ -235,6 +362,15 @@ void PackageModel::applyFilter(const int filterColumn, const QString& filterExp)
   m_filterColumn = filterColumn;
   m_filterRegExp.setPattern(filterExp);
   endResetRepository();
+}
+
+PackageItem& PackageModel::getPackageItem(const QModelIndex& index) const
+{
+  if (index.isValid()) {
+    PackageItem*const branch = static_cast<PackageItem*const>(index.internalPointer());
+    if (branch) return *branch;
+  }
+  return *m_rootItem;
 }
 
 const QIcon& PackageModel::getIconFor(const PackageRepository::PackageData& package) const
@@ -320,4 +456,20 @@ void PackageModel::sort()
   default:
     return;
   }
+}
+
+int PackageModel::transformRowIndex(int row, int rowCount) const
+{
+  switch (m_sortOrder) {
+  case Qt::AscendingOrder:
+    return row;
+  case Qt::DescendingOrder:
+    return rowCount - row - 1;
+  }
+  return -1;
+}
+
+PackageItem*PackageModel::createDummyRoot()
+{
+  return new PackageItem(PackageItem::TPkgVec(), PackageItem::DEPENDS_ON);
 }

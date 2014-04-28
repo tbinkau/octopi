@@ -381,6 +381,11 @@ private slots:
   void launchPLV();
   void launchRepoEditor();
 
+// prototyping dependency view
+  void on_actionShow_Dependencies_triggered();
+  void on_actionShow_Package_list_triggered();
+  void on_actionShow_Required_by_triggered();
+
 public slots:
   void doSystemUpgrade(SystemUpgradeOptions sysUpgradeOption = ectn_NO_OPT);
 
