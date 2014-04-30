@@ -1,8 +1,13 @@
-This is Octopi, a powerful Pacman/Yaourt frontend using Qt libs. 
-================================================================
+This is a fork of Octopi, a powerful Pacman/Yaourt frontend using Qt libs. 
+=========================================================================
 
-The project's source code is hosted at 
-	https://github.com/aarnt/octopi.
+This is just a fork for experimental and educational purposes.
+
+For the REAL (working) thing please look at: 
+	https://github.com/aarnt/octopi
+
+The fork's source code is hosted at 
+	https://github.com/tbinkau/octopi.
 
 You'll need a privilege escalation tool to use it, once running as 
 root will ONLY work in KDE. Octopi supports kdesu and gksu for that.

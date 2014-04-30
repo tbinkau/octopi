@@ -54,6 +54,10 @@ public:
   static QIcon getIconUnrequired(){ return QIcon(":/resources/images/unrequired.png"); }
   static QIcon getIconForeignGreen(){ return QIcon(":/resources/images/foreign_green.png"); }
   static QIcon getIconForeignRed(){ return QIcon(":/resources/images/foreign_red.png"); }
+  static QIcon getIconInstalledUser(){ return QIcon(":/resources/images/installed_user.png"); }
+  static QIcon getIconOutdatedUser(){ return QIcon(":/resources/images/outdated_user.png"); }
+  static QIcon getIconNewerUser(){ return QIcon(":/resources/images/newer_user.png"); }
+  static QIcon getIconUnrequiredUser(){ return QIcon(":/resources/images/unrequired_user.png"); }
 
   static QIcon getIconFolder()
   {

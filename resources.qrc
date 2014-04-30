@@ -78,5 +78,9 @@
         <file>resources/translations/octopi_ms_MY.qm</file>
         <file>resources/translations/octopi_uk.qm</file>
         <file>resources/translations/octopi_sk.qm</file>
+        <file>resources/images/installed_user.png</file>
+        <file>resources/images/unrequired_user.png</file>
+        <file>resources/images/newer_user.png</file>
+        <file>resources/images/outdated_user.png</file>
     </qresource>
 </RCC>
