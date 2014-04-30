@@ -424,11 +424,14 @@ const QIcon& PackageModel::getIconFor(const PackageRepository::PackageData& pack
 
 struct TSort0 {
   bool operator()(const PackageRepository::PackageData* a, const PackageRepository::PackageData* b) const {
-    if (a->status < b->status) return true;
-    if (a->status == b->status) {
-      if (a->required < b->required) return true;
-      if (a->required == b->required) {
-        return a->name < b->name;
+    if (a->explicitlyInstalled > b->explicitlyInstalled) return true;
+    if (a->explicitlyInstalled == b->explicitlyInstalled) {
+      if (a->status < b->status) return true;
+      if (a->status == b->status) {
+        if (a->required < b->required) return true;
+        if (a->required == b->required) {
+          return a->name < b->name;
+        }
       }
     }
     return false;
@@ -437,13 +440,22 @@ struct TSort0 {
 
 struct TSort2 {
   bool operator()(const PackageRepository::PackageData* a, const PackageRepository::PackageData* b) const {
-    return Package::rpmvercmp(a->version.toLatin1().data(), b->version.toLatin1().data()) < 0;
+    const int cmp = Package::rpmvercmp(a->version.toLatin1().data(), b->version.toLatin1().data());
+    if (cmp < 0) return true;
+    if (cmp == 0) {
+      return a->name < b->name;
+    }
+    return false;
   }
 };
 
 struct TSort3 {
   bool operator()(const PackageRepository::PackageData* a, const PackageRepository::PackageData* b) const {
-    return a->repository < b->repository;
+    if (a->repository < b->repository) return true;
+    if (a->repository == b->repository) {
+      return a->name < b->name;
+    }
+    return false;
   }
 };
 
