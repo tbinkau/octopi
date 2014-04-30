@@ -80,6 +80,7 @@ public:
   static QByteArray performYaourtCommand(const QString &args);
   static QByteArray getYaourtPackageList(const QString &searchString);
   static QByteArray getUnrequiredPackageList();
+  static QByteArray getExplicitlyInstalledPackageList();
   static QByteArray getOutdatedPackageList();
   static QByteArray getOutdatedYaourtPackageList();
   static QByteArray getForeignPackageList();

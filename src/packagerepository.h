@@ -67,7 +67,8 @@ public:
      * @param package    = parsed data from pacman (e.g.)
      * @param isRequired = false if package is not required by other packages installed, or true otherwise
      */
-    PackageData(const PackageListData& package, const bool isRequired, const bool isManagedByYaourt);
+    PackageData(const PackageListData& package, const bool isRequired, const bool isManagedByYaourt,
+                const bool wasExplicitlyInstalled);
 
     inline bool installed() const {
       return status != ectn_NON_INSTALLED;
@@ -97,6 +98,7 @@ public:
   public:
     const bool    required;
     const bool    managedByYaourt; // yaourt packages must not be in any group
+    const bool    explicitlyInstalled;
     const QString name;
     const QString repository;
     const QString version;
@@ -147,7 +149,8 @@ public:
   PackageRepository();
 
   void registerDependency(IDependency& depends);
-  void setData(const QList<PackageListData>*const listOfPackages, const QSet<QString>& unrequiredPackages);
+  void setData(const QList<PackageListData>*const listOfPackages, const QSet<QString>& unrequiredPackages,
+               const QSet<QString>& explicitlyInstalledPackages);
   void setAURData(const QList<PackageListData>*const listOfForeignPackages, const QSet<QString>& unrequiredPackages);
   void setPackageDependencies(const QList<std::pair<PackageData*, QStringList> >& dependencies);
   bool setPackageRequirements(bool forceSuccessful);

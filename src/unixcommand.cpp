@@ -227,6 +227,15 @@ QByteArray UnixCommand::getUnrequiredPackageList()
 }
 
 /*
+ * Returns a string containing all packages which were explicitly installed
+ */
+QByteArray UnixCommand::getExplicitlyInstalledPackageList()
+{
+  QByteArray result = performQuery(QStringList("-Qe"));
+  return result;
+}
+
+/*
  * Returns a string containing all packages that are outdated since last DB sync
  */
 QByteArray UnixCommand::getOutdatedPackageList()

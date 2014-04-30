@@ -198,6 +198,25 @@ QSet<QString>* Package::getUnrequiredPackageList()
 }
 
 /*
+ * Retrieves the list of explicitly installed packages (not as dependency)
+ */
+QSet<QString>*Package::getExplicitPackageList()
+{
+  QString explicitPkgList = UnixCommand::getExplicitlyInstalledPackageList();
+  QStringList packageTuples = explicitPkgList.split(QRegExp("\\n"), QString::SkipEmptyParts);
+  QSet<QString>* res = new QSet<QString>();
+
+  foreach(QString packageTuple, packageTuples)
+  {
+    QStringList parts = packageTuple.split(' ');
+    {
+      res->insert(parts[0]); //We only need the package name!
+    }
+  }
+  return res;
+}
+
+/*
  * Retrieves the list of outdated packages (those which have newer versions available to download)
  */
 QStringList *Package::getOutdatedPackageList()

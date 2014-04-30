@@ -124,6 +124,7 @@ class Package{
 	public:
     static int rpmvercmp(const char *a, const char *b);
     static QSet<QString>* getUnrequiredPackageList();
+    static QSet<QString>* getExplicitPackageList(); // pacman explicitly installed
     static QStringList * getOutdatedPackageList();
     static QStringList * getOutdatedYaourtPackageList();
     static QStringList * getPackageGroups();

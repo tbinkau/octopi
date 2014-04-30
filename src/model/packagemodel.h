@@ -117,6 +117,10 @@ private:
   QIcon   m_iconInstalledUnrequired;
   QIcon   m_iconNewer;
   QIcon   m_iconOutdated;
+  QIcon   m_iconInstalledByUser;
+  QIcon   m_iconInstalledUnrequiredByUser;
+  QIcon   m_iconNewerByUser;
+  QIcon   m_iconOutdatedByUser;
   QIcon   m_iconForeign;
   QIcon   m_iconForeignOutdated;
 

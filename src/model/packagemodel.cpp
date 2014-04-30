@@ -36,6 +36,10 @@ PackageModel::PackageModel(const PackageRepository& repo, QObject *parent)
   m_iconNotInstalled(IconHelper::getIconNonInstalled()), m_iconInstalled(IconHelper::getIconInstalled()),
   m_iconInstalledUnrequired(IconHelper::getIconUnrequired()),
   m_iconNewer(IconHelper::getIconNewer()), m_iconOutdated(IconHelper::getIconOutdated()),
+  m_iconInstalledByUser(IconHelper::getIconInstalledUser()),
+  m_iconInstalledUnrequiredByUser(IconHelper::getIconUnrequiredUser()),
+  m_iconNewerByUser(IconHelper::getIconNewerUser()),
+  m_iconOutdatedByUser(IconHelper::getIconOutdatedUser()),
   m_iconForeign(IconHelper::getIconForeignGreen()), m_iconForeignOutdated(IconHelper::getIconForeignRed())
 {
 }
@@ -385,22 +389,27 @@ const QIcon& PackageModel::getIconFor(const PackageRepository::PackageData& pack
     {
       //TODO: potential refactoring for performance if necessary
       if (Package::rpmvercmp(package.outdatedVersion.toLatin1().data(), package.version.toLatin1().data()) == 1) {
+        if (package.explicitlyInstalled) return m_iconNewerByUser;
         return m_iconNewer;
       }
       else {
+        if (package.explicitlyInstalled) return m_iconOutdatedByUser;
         return m_iconOutdated;
       }
       assert(false);
+      if (package.explicitlyInstalled) return m_iconOutdatedByUser;
       return m_iconOutdated;
     }
     case ectn_INSTALLED:
       // Does no other package depend on this package ? (unrequired package list)
       if (package.required)
       {
+        if (package.explicitlyInstalled) return m_iconInstalledByUser;
         return m_iconInstalled;
       }
       else
       {
+        if (package.explicitlyInstalled) return m_iconInstalledUnrequiredByUser;
         return m_iconInstalledUnrequired;
       }
       break;

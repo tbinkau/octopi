@@ -56,7 +56,9 @@ struct EndResetModel {
   }
 };
 
-void PackageRepository::setData(const QList<PackageListData>*const listOfPackages, const QSet<QString>& unrequiredPackages)
+void PackageRepository::setData(const QList<PackageListData>*const listOfPackages,
+                                const QSet<QString>& unrequiredPackages,
+                                const QSet<QString>& explicitlyInstalledPackages)
 {
 //  std::cout << "received new package list" << std::endl;
 
@@ -74,7 +76,8 @@ void PackageRepository::setData(const QList<PackageListData>*const listOfPackage
   m_listOfPackages.clear();
 
   for (QList<PackageListData>::const_iterator it = listOfPackages->begin(); it != listOfPackages->end(); ++it) {
-    m_listOfPackages.push_back(new PackageData(*it, unrequiredPackages.contains(it->name) == false, false));
+    m_listOfPackages.push_back(new PackageData(*it, unrequiredPackages.contains(it->name) == false, false,
+                                               explicitlyInstalledPackages.contains(it->name) == true));
   }
 
   qSort(m_listOfPackages.begin(), m_listOfPackages.end(), TSort());
@@ -100,7 +103,8 @@ void PackageRepository::setAURData(const QList<PackageListData>*const listOfFore
     for (QList<PackageListData>::const_iterator it = listOfForeignPackages->begin();
          it != listOfForeignPackages->end(); ++it)
     {
-      PackageData*const pkg = new PackageData(*it, unrequiredPackages.contains(it->name) == false, true);
+      //TODO: check if explicitly installed really is always true for yaourt
+      PackageData*const pkg = new PackageData(*it, unrequiredPackages.contains(it->name) == false, true, true);
       m_listOfPackages.push_back(pkg);
       m_listOfYaourtPackages.push_back(pkg);
     }
@@ -320,8 +324,10 @@ bool PackageRepository::memberListOfGroupsEquals(const QStringList& listOfGroups
 /**
  * @brief conversion from pkg will default the repository to the foreign repo name
  */
-PackageRepository::PackageData::PackageData(const PackageListData& pkg, const bool isRequired, const bool isManagedByYaourt)
-  : required(isRequired), managedByYaourt(isManagedByYaourt), name(pkg.name),
+PackageRepository::PackageData::PackageData(const PackageListData& pkg, const bool isRequired,
+                                            const bool isManagedByYaourt,const bool wasExplicitlyInstalled)
+  : required(isRequired), managedByYaourt(isManagedByYaourt),
+    explicitlyInstalled(wasExplicitlyInstalled), name(pkg.name),
     repository(pkg.repository.isEmpty() ? StrConstants::getForeignRepositoryName() : pkg.repository),
     version(pkg.version), description(pkg.description.toLatin1()), // octopi wants it converted to utf8
     outdatedVersion(pkg.outatedVersion), downloadSize(pkg.downloadSize), status(pkg.status)

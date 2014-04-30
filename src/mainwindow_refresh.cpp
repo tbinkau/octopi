@@ -370,6 +370,7 @@ void MainWindow::buildPackageList(bool nonBlocking)
 
   qApp->processEvents();
   const std::auto_ptr<const QSet<QString> > unrequiredPackageList(Package::getUnrequiredPackageList());
+  const std::auto_ptr<const QSet<QString> > explicitlyInstalledPackageList(Package::getExplicitPackageList());
 
   // fetch package list
   QList<PackageListData> *list;
@@ -408,7 +409,7 @@ void MainWindow::buildPackageList(bool nonBlocking)
     itForeign++;
   }
 
-  m_packageRepo.setData(list, *unrequiredPackageList);
+  m_packageRepo.setData(list, *unrequiredPackageList, *explicitlyInstalledPackageList);
   if (isAllGroupsSelected()) m_packageModel->applyFilter(!ui->actionNonInstalledPackages->isChecked(), "");
   m_progressWidget->show();
   QList<PackageListData>::const_iterator it = list->begin();
