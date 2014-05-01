@@ -99,7 +99,7 @@ QModelIndex PackageModel::parent(const QModelIndex& child) const
         if (parent.getChildAt(row) == data)
           break;
       }
-      return createIndex(row, child.column(), (void*)&parent);
+      return createIndex(row, 0, (void*)&parent);
     }
   }
   default:
