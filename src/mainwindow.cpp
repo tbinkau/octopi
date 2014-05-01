@@ -1146,7 +1146,7 @@ void MainWindow::tvPackagesSelectionChanged(const QItemSelection&, const QItemSe
       arg(QString::number(selected));
 
   m_lblSelCounter->setText(newMessage);
-  changedTabIndex();
+  if (m_leFilterPackage->hasFocus() == false) changedTabIndex();
 }
 
 /*

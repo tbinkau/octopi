@@ -73,6 +73,9 @@ public:
     inline bool installed() const {
       return status != ectn_NON_INSTALLED;
     }
+    inline bool outdated() const {
+      return status == ectn_OUTDATED || status == ectn_NEWER;
+    }
 
     inline const TDependencyVec* getDependsOn() const {
       return dependsOn.get();
@@ -107,6 +110,7 @@ public:
     const double  downloadSize;
     const PackageStatus status;
     const int     popularity; // -1 for non AUR
+    const QString popularityString;
 
   private:
     std::auto_ptr<const TDependencyVec> dependsOn;

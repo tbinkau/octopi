@@ -26,6 +26,7 @@
 #include <QSet>
 
 #include "strconstants.h"
+#include "package.h"
 
 
 PackageRepository::PackageRepository()
@@ -330,8 +331,13 @@ PackageRepository::PackageData::PackageData(const PackageListData& pkg, const bo
     explicitlyInstalled(wasExplicitlyInstalled), name(pkg.name),
     repository(pkg.repository.isEmpty() ? StrConstants::getForeignRepositoryName() : pkg.repository),
     version(pkg.version), description(pkg.description.toLatin1()), // octopi wants it converted to utf8
-    outdatedVersion(pkg.outatedVersion), downloadSize(pkg.downloadSize), status(pkg.status),
-    popularity(isManagedByYaourt ? pkg.popularity : -1)
+    outdatedVersion(pkg.outatedVersion), downloadSize(pkg.downloadSize),
+    status(pkg.status != ectn_OUTDATED ?
+            pkg.status :
+            (Package::rpmvercmp(pkg.outatedVersion.toLatin1().data(), pkg.version.toLatin1().data()) == 1 ?
+              ectn_NEWER : ectn_OUTDATED)),
+    popularity(isManagedByYaourt ? pkg.popularity : -1),
+    popularityString(isManagedByYaourt ? QString::number(pkg.popularity) + StrConstants::getVotes() : QString())
 {
 }
 

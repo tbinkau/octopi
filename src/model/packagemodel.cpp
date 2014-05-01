@@ -161,7 +161,7 @@ QVariant PackageModel::data(const QModelIndex &index, int role) const
             return QVariant(package->repository);
           case ctn_PACKAGE_POPULARITY_COLUMN:
             if (package->popularity >= 0)
-              return QVariant(QString::number(package->popularity) + StrConstants::getVotes());
+              return QVariant(package->popularityString);
             break;
           default:
             assert(false);
@@ -392,20 +392,11 @@ const QIcon& PackageModel::getIconFor(const PackageRepository::PackageData& pack
     case ectn_FOREIGN_OUTDATED:
       return m_iconForeignOutdated;
     case ectn_OUTDATED:
-    {
-      //TODO: potential refactoring for performance if necessary
-      if (Package::rpmvercmp(package.outdatedVersion.toLatin1().data(), package.version.toLatin1().data()) == 1) {
-        if (package.explicitlyInstalled) return m_iconNewerByUser;
-        return m_iconNewer;
-      }
-      else {
-        if (package.explicitlyInstalled) return m_iconOutdatedByUser;
-        return m_iconOutdated;
-      }
-      assert(false);
       if (package.explicitlyInstalled) return m_iconOutdatedByUser;
       return m_iconOutdated;
-    }
+    case ectn_NEWER:
+      if (package.explicitlyInstalled) return m_iconNewerByUser;
+      return m_iconNewer;
     case ectn_INSTALLED:
       // Does no other package depend on this package ? (unrequired package list)
       if (package.required)
@@ -467,7 +458,7 @@ struct TSort3 {
 
 struct TSort4 {
   bool operator()(const PackageRepository::PackageData* a, const PackageRepository::PackageData* b) const {
-    if (a->popularity < b->popularity) return true;
+    if (a->popularity > b->popularity) return true;
     if (a->popularity == b->popularity) {
       return a->name < b->name;
     }
