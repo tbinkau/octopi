@@ -713,7 +713,7 @@ void MainWindow::refreshTabInfo(bool clearContents, bool neverQuit)
     return;
   }
 
-  QModelIndex item = selectionModel->selectedRows(PackageModel::ctn_PACKAGE_NAME_COLUMN).first();
+  QModelIndex item = selectionModel->selectedRows(PackageModel::ctn_PACKAGE_NAME_COLUMN).last();
   const PackageRepository::PackageData*const package = m_packageModel->getData(item);
   if (package == NULL) {
     assert(false);
