@@ -78,7 +78,7 @@
        <widget class="QTreeWidget" name="twGroups">
         <property name="maximumSize">
          <size>
-          <width>235</width>
+          <width>335</width>
           <height>16777215</height>
          </size>
         </property>

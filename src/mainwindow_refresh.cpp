@@ -89,7 +89,8 @@ void MainWindow::refreshGroupsWidget()
   ui->twGroups->clear();
   m_hasYaourt = UnixCommand::hasTheExecutable(StrConstants::getForeignRepositoryToolName()) && !UnixCommand::isRootRunning();
 
-  items.append(new QTreeWidgetItem((QTreeWidget*)0, QStringList("<" + StrConstants::getDisplayAllGroups() + ">")));
+  QTreeWidgetItem*const pacman = new QTreeWidgetItem((QTreeWidget*)0, QStringList("<" + StrConstants::getDisplayAllGroups() + ">"));
+  items.append(pacman);
   m_AllGroupsItem = items.at(0);
 
   if (m_hasYaourt)
@@ -98,10 +99,15 @@ void MainWindow::refreshGroupsWidget()
     m_YaourtItem = items.at(1);
   }
 
+  QTreeWidgetItem* lastGroupItem = NULL;
   const QStringList*const packageGroups = Package::getPackageGroups();
   foreach(QString group, *packageGroups)
   {
-    items.append(new QTreeWidgetItem((QTreeWidget*)0, QStringList(group)));
+    lastGroupItem = refreshGroupsWidget_tryGetAddGroup(lastGroupItem, group);
+    if (lastGroupItem == NULL) {
+      lastGroupItem = new QTreeWidgetItem((QTreeWidget*)0, QStringList(group));
+      pacman->addChild(lastGroupItem);
+    }
   }
   m_packageRepo.checkAndSetGroups(*packageGroups); // update Package Repository as well
   delete packageGroups;
@@ -110,6 +116,23 @@ void MainWindow::refreshGroupsWidget()
   ui->twGroups->setCurrentItem(items.at(0));
 
   connect(ui->twGroups, SIGNAL(itemSelectionChanged()), this, SLOT(metaBuildPackageList()));
+}
+
+QTreeWidgetItem* MainWindow::refreshGroupsWidget_tryGetAddGroup(QTreeWidgetItem*const lastItem, QString group)
+{
+  if (lastItem == NULL) return NULL;
+
+  QString lastGroup = lastItem->data(0, Qt::DisplayRole).toString();
+  QTreeWidgetItem*const groupItem = new QTreeWidgetItem((QTreeWidget*)0, QStringList(group));
+  if (group.startsWith(lastGroup)) {
+    lastItem->addChild(groupItem);
+    return groupItem;
+  }
+  else {
+    if (lastItem->parent())
+      return refreshGroupsWidget_tryGetAddGroup(lastItem->parent(), group);
+    else return NULL;
+  }
 }
 
 /*

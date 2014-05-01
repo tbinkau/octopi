@@ -179,6 +179,7 @@ private:
   void refreshAppIcon();
   void initPackageGroups();
   void refreshGroupsWidget();
+  QTreeWidgetItem* refreshGroupsWidget_tryGetAddGroup(QTreeWidgetItem*const lastItem, QString group);
   void initToolBar();
   void initStatusBar();
   void initLineEditFilterPackages();
