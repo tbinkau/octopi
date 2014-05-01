@@ -330,7 +330,8 @@ PackageRepository::PackageData::PackageData(const PackageListData& pkg, const bo
     explicitlyInstalled(wasExplicitlyInstalled), name(pkg.name),
     repository(pkg.repository.isEmpty() ? StrConstants::getForeignRepositoryName() : pkg.repository),
     version(pkg.version), description(pkg.description.toLatin1()), // octopi wants it converted to utf8
-    outdatedVersion(pkg.outatedVersion), downloadSize(pkg.downloadSize), status(pkg.status)
+    outdatedVersion(pkg.outatedVersion), downloadSize(pkg.downloadSize), status(pkg.status),
+    popularity(isManagedByYaourt ? pkg.popularity : -1)
 {
 }
 

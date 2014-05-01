@@ -421,11 +421,11 @@ void MainWindow::initPackageTreeView()
 #if QT_VERSION < 0x050000
   ui->tvPackages->header()->setClickable(true);
   ui->tvPackages->header()->setMovable(false);
-  ui->tvPackages->header()->setResizeMode( QHeaderView::Fixed );
+  ui->tvPackages->header()->setResizeMode( QHeaderView::Interactive );
 #else
   ui->tvPackages->header()->setSectionsClickable(true);
   ui->tvPackages->header()->setSectionsMovable(false);
-  ui->tvPackages->header()->setSectionResizeMode(QHeaderView::Fixed);
+  ui->tvPackages->header()->setSectionResizeMode(QHeaderView::Interactive);
 #endif
 
     ui->tvPackages->header()->setDefaultAlignment( Qt::AlignLeft );

@@ -130,10 +130,10 @@ int PackageModel::columnCount(const QModelIndex&) const
 {
   switch (m_displayMode) {
   case FLAT:
-    return 4;
+    return 5;
   case DEPENDS_ON:
   case REQUIRED_BY:
-    return 4;
+    return 5;
   default:
     return 0;
   }
@@ -159,6 +159,10 @@ QVariant PackageModel::data(const QModelIndex &index, int role) const
             return QVariant(package->version);
           case ctn_PACKAGE_REPOSITORY_COLUMN:
             return QVariant(package->repository);
+          case ctn_PACKAGE_POPULARITY_COLUMN:
+            if (package->popularity >= 0)
+              return QVariant(QString::number(package->popularity) + StrConstants::getVotes());
+            break;
           default:
             assert(false);
         }
@@ -202,6 +206,8 @@ QVariant PackageModel::headerData(int section, Qt::Orientation orientation, int 
         return QVariant(StrConstants::getVersion());
       case ctn_PACKAGE_REPOSITORY_COLUMN:
         return QVariant(StrConstants::getRepository());
+      case ctn_PACKAGE_POPULARITY_COLUMN:
+        return QVariant(StrConstants::getPopularityHeader());
       default:
         break;
       }
@@ -459,6 +465,16 @@ struct TSort3 {
   }
 };
 
+struct TSort4 {
+  bool operator()(const PackageRepository::PackageData* a, const PackageRepository::PackageData* b) const {
+    if (a->popularity < b->popularity) return true;
+    if (a->popularity == b->popularity) {
+      return a->name < b->name;
+    }
+    return false;
+  }
+};
+
 void PackageModel::sort()
 {
   switch (m_sortColumn) {
@@ -473,6 +489,9 @@ void PackageModel::sort()
     return;
   case ctn_PACKAGE_REPOSITORY_COLUMN:
     qSort(m_columnSortedlistOfPackages.begin(), m_columnSortedlistOfPackages.end(), TSort3());
+    return;
+  case ctn_PACKAGE_POPULARITY_COLUMN:
+    qSort(m_columnSortedlistOfPackages.begin(), m_columnSortedlistOfPackages.end(), TSort4());
     return;
   default:
     return;

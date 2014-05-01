@@ -106,6 +106,7 @@ public:
     const QString outdatedVersion;
     const double  downloadSize;
     const PackageStatus status;
+    const int     popularity; // -1 for non AUR
 
   private:
     std::auto_ptr<const TDependencyVec> dependsOn;

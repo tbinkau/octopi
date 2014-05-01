@@ -200,6 +200,14 @@ public:
     return QObject::tr("Replaces");
   }
 
+  static QString getPopularityHeader(){
+    return QObject::tr("Popularity");
+  }
+
+  static QString getVotes(){
+    return QObject::tr(" votes");
+  }
+
   static QString getDownloadSize(){
     return QObject::tr("Download Size");
   }

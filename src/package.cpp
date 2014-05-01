@@ -488,6 +488,7 @@ QList<PackageListData> * Package::getYaourtPackageList(const QString& searchStri
   //aur/libfm 1.1.0-4 (lxde) [installed: 1.1.0-3]
 
   QString pkgName, pkgRepository, pkgVersion, pkgDescription, pkgOutVersion;
+  int pkgVotes;
   PackageStatus pkgStatus;
   QList<PackageListData> * res = new QList<PackageListData>();
 
@@ -515,6 +516,7 @@ QList<PackageListData> * Package::getYaourtPackageList(const QString& searchStri
 
         PackageListData pld =
             PackageListData(pkgName, pkgRepository, pkgVersion, pkgDescription, pkgStatus, pkgOutVersion);
+        pld.popularity = pkgVotes;
 
         res->append(pld);
 
@@ -537,6 +539,7 @@ QList<PackageListData> * Package::getYaourtPackageList(const QString& searchStri
 
       pkgName = repoName.mid(a+1);
       pkgVersion = parts[1];
+      pkgVotes = parts[parts.size() - 1].replace('(', "").replace(')', "").toInt();
 
       if(packageTuple.indexOf("[installed]") != -1)
       {
