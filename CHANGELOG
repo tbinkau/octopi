@@ -3,6 +3,7 @@
                  depend on a package as child items in the package view
                 -replaced a few package view icons with DUMMY icons and
                  added new ones for packages installed by user
+                -added some info to the help tab 
   BugFix: Package info tab will be updated correctly when using the keyboard
     for navigation.
   BugFix: Now Shift+F3 and F3 search keys (and also Esc) work outside 

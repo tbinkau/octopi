@@ -94,7 +94,15 @@ void MainWindow::initTabHelpUsage()
      tr("An outdated foreign package") +
   QString("</li>") +
   QString("<li>") + iconPath + "newer.png\"/> " +
-           tr("A newer than repository package") +
+     tr("A newer than repository package") +
+  QString("</li>") +
+  QString("<li>")
+        + iconPath + "installed_user.png\"/>, "
+        + iconPath + "unrequired_user.png\"/>, "
+        + iconPath + "outdated_user.png\"/>, "
+        + iconPath + "newer_user.png\"/>, "
+        + tr(" same as above but explicitly installed packages (requested by user)")
+        +
   QString("</li></ul>") +
 
      tr("Basic usage help:") +
