@@ -50,7 +50,7 @@ enum SearchPlace { ectn_INSIDE_INSTALLED_PACKAGES, ectn_INSIDE_DIRECTORY, ectn_I
 
 enum DumpInstalledPackageListOptions { ectn_WITH_MODIFIED_DATE, ectn_NO_MODIFIED_DATE };
 
-enum PackageStatus { ectn_INSTALLED, ectn_NON_INSTALLED, ectn_OUTDATED, ectn_NEWER, ectn_FOREIGN, ectn_FOREIGN_OUTDATED };
+enum PackageStatus { ectn_OUTDATED, ectn_NEWER, ectn_INSTALLED, ectn_NON_INSTALLED, ectn_FOREIGN, ectn_FOREIGN_OUTDATED };
 
 struct PackageListData{
   QString name;
